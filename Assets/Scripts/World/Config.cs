@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace World {
-    public class Config : MonoBehaviour
+    public static class Config
     {
         public static readonly float OuterRadius = 10f;
         public static readonly float InnerRadius = (Mathf.Sqrt(3f) / 2f) * OuterRadius;
@@ -52,7 +50,7 @@ namespace World {
             return GetFirstCorner(direction) * StartBlendFactor;
         }
 
-        public static Vector3 GetSecondSolidCorner(HexDirection direction) {
+        public static Vector3 GetSecondBlendCorner(HexDirection direction) {
             return GetSecondCorner(direction) * StartBlendFactor;
         }
 

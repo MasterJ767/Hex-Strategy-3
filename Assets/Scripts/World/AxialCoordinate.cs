@@ -1,8 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace World {
+    [Serializable]
     public struct AxialCoordinate
     {
         [SerializeField] private int q;
