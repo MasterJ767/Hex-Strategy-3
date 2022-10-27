@@ -96,7 +96,8 @@ namespace World {
                 cellEdge.v3.y = cell.RiverBedY;
                 neighbourEdge.v3.y = neighbour.RiverBedY;
 
-                // Triangulate River Quad here
+                if (cell.outgoingRivers[(int)direction]) TriangulateStrip(Edge3.SetY(new Edge3(cellEdge, true), cell.RiverSurfaceY), Edge3.SetY(new Edge3(neighbourEdge, true), neighbour.RiverSurfaceY), 0f, 1f, 0.8f, 1f);
+                else TriangulateStrip(Edge3.SetY(new Edge3(cellEdge, true), cell.RiverSurfaceY), Edge3.SetY(new Edge3(neighbourEdge, true), cell.RiverSurfaceY), 1f, 0f, 1f, 0.8f);
             }
 
             if (cell.HasRoadThroughEdge(direction)) {
@@ -331,6 +332,14 @@ namespace World {
             terrain.AddQuadColour(c1, c2);
             terrain.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
             terrain.AddQuadColour(c1, c2);
+        }
+
+        private void TriangulateStrip(Edge3 e1, Edge3 e2, float u1, float u2, float v1, float v2){
+            float um = (u1 + u2) / 2;
+            rivers.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
+            rivers.AddQuadUV(new Vector2(u1, v1), new Vector2(um, v1), new Vector2(u1, v2), new Vector2(um, v2));
+            rivers.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
+            rivers.AddQuadUV(new Vector2(um, v1), new Vector2(u2, v1), new Vector2(um, v2), new Vector2(u2, v2));
         }
 
         private void TriangulateStrip(Edge5 e1, Edge5 e2, Color c1, Color c2)

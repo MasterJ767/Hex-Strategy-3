@@ -42,6 +42,13 @@ namespace World {
             v3 = !extractMiddle ? e1.v5 : e1.v4;
         }
 
+        public static Edge3 SetY(Edge3 e, float y){
+            e.v1.y = y;
+            e.v2.y = y;
+            e.v3.y = y;
+            return e;
+        }
+
         public static Edge3 TerraceLerp(Edge3 e1, Edge3 e2, int step){
             Edge3 e3;
             e3.v1 = Edge.TerraceLerp(e1.v1, e2.v1, step);
@@ -72,6 +79,15 @@ namespace World {
             v3 = e1.v2;
             v4 = Vector3.Lerp(e1.v2, e1.v3, 0.5f);
             v5 = e1.v3;
+        }
+
+        public static Edge5 SetY(Edge5 e, float y){
+            e.v1.y = y;
+            e.v2.y = y;
+            e.v3.y = y;
+            e.v4.y = y;
+            e.v5.y = y;
+            return e;
         }
 
         public static Edge5 TerraceLerp(Edge5 e1, Edge5 e2, int step){
