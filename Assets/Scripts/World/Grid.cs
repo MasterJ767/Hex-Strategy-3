@@ -24,8 +24,7 @@ namespace World{
             }
         }
 
-        private void CreateChunks()
-        {
+        private void CreateChunks() {
             chunks = new Chunk[Config.WorldWidthInChunks * Config.WorldHeightInChunks];
             
             for (int x = 0, i = 0; x < Config.WorldWidthInChunks; x++) 
@@ -38,8 +37,7 @@ namespace World{
             }
         }
 
-        private void CreateCells()
-        {
+        private void CreateCells() {
             cells = new Cell[Config.WorldWidthInCells * Config.WorldHeightInCells];
 
             for (int x = 0, i = 0; x < Config.WorldWidthInCells; x++)
@@ -51,8 +49,7 @@ namespace World{
             }
         }
 
-        private void CreateCell(int x, int z, int i)
-        {
+        private void CreateCell(int x, int z, int i) {
             Vector3 position = new (x * Config.OuterRadius * 1.5f, 0f, (z + x * 0.5f - (int)(x / 2)) * (Config.InnerRadius * 2f));
             
             Cell cell = cells[i] = Instantiate(cellPrefab);
@@ -96,8 +93,7 @@ namespace World{
             AddCellToChunk(x, z, cell);
         }
         
-        private void AddCellToChunk (int x, int z, Cell cell) 
-        {
+        private void AddCellToChunk (int x, int z, Cell cell) {
             int chunkX = (int)(x / Config.ChunkWidth);
             int chunkZ = (int)(z / Config.ChunkHeight);
             Chunk chunk = chunks[chunkX * Config.WorldHeightInChunks + chunkZ];

@@ -59,8 +59,7 @@ namespace World {
             }
         }
 
-        private void Triangulate(HexDirection direction, Cell cell)
-        {
+        private void Triangulate(HexDirection direction, Cell cell) {
             Vector3 centre = cell.Position;
             Vector3 v2 = centre + Config.GetFirstBlendCorner(direction);
             Vector3 v3 = centre + Config.GetSecondBlendCorner(direction);
