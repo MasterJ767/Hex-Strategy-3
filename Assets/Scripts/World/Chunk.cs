@@ -105,7 +105,7 @@ namespace World {
             }
 
             if (cell.GetElevationDifference(direction) == 1) TriangulateBridgeTerrace(cell, neighbour, cellEdge, neighbourEdge);
-            else TriangulateStrip(cellEdge, neighbourEdge, cell.Colour, neighbour.Colour, terrain);
+            else TriangulateStrip(cellEdge, neighbourEdge, cell.Colour, neighbour.Colour);
         }
 
         private void TriangulateBridgeTerrace(Cell cell, Cell neighbour, Edge5 cellEdge, Edge5 neighbourEdge){
@@ -115,7 +115,7 @@ namespace World {
                 Color c1 = Edge.TerraceColourLerp(cell.Colour, neighbour.Colour, i);
                 Color c2 = Edge.TerraceColourLerp(cell.Colour, neighbour.Colour, i + 1);
 
-                TriangulateStrip(e1, e2, c1, c2, terrain);
+                TriangulateStrip(e1, e2, c1, c2);
             }
         }
 
@@ -223,65 +223,138 @@ namespace World {
         }
 
         private void TriangulateRiverCell(HexDirection direction, Cell cell, Vector3 centre, Edge3 junctionEdge, Edge5 blendEdge) {
+            if (cell.HasRiverThroughEdge(direction)) {
+                centre.y = cell.RiverBedY;
+                blendEdge.v3.y = cell.RiverBedY;
+                junctionEdge.v2.y = cell.RiverBedY;
+                TriangulateSolidCell(direction, cell, centre, junctionEdge, blendEdge);
 
+                // Triangulate river mesh here
+            }
+            else if (cell.HasRiverEnd){
+                centre.y = cell.RiverBedY;
+                TriangulateSolidCell(direction, cell, centre, junctionEdge, blendEdge);
+
+                // Triangulate river mesh here
+            }
+            else {
+                TriangulateStrip(junctionEdge, blendEdge, cell.Colour, cell.Colour);
+
+                int previousRiver = -1;
+                int nextRiver = -1;
+
+                for (int pDir = Config.Mod((int)direction - 1, 6); pDir != (int)direction; pDir = Config.Mod(pDir - 1, 6))
+                {
+                    if (cell.HasRiverThroughEdge((HexDirection)pDir))
+                    {
+                        previousRiver = pDir;
+                        break;
+                    }
+                }
+
+                for (int nDir = Config.Mod((int)direction + 1, 6); nDir != (int)direction; nDir = Config.Mod(nDir + 1, 6))
+                {
+                    if (cell.HasRiverThroughEdge((HexDirection)nDir))
+                    {
+                        nextRiver = nDir;
+                        break;
+                    }
+                }
+
+                Vector3 m1 = Vector3.Lerp(centre, junctionEdge.v1, 0.5f);
+                Vector3 m2 = Vector3.Lerp(centre, junctionEdge.v3, 0.5f);
+                centre.y = cell.RiverBedY;
+
+                if ((int)direction.Previous() == previousRiver && (int)direction.Next() == nextRiver) {
+                    TriangulateFan(centre, junctionEdge, cell.Colour);
+
+                    // Triangulate river mesh here
+                }
+                else if ((int)direction.Previous() == previousRiver) {
+                    TriangulateFan(m2, junctionEdge, cell.Colour);
+                    terrain.AddTriangle(centre, junctionEdge.v1, m2);
+                    terrain.AddTriangleColour(cell.Colour);
+
+                    // Triangulate river mesh here
+                }
+                else if ((int)direction.Next() == nextRiver) {
+                    TriangulateFan(m1, junctionEdge, cell.Colour);
+                    terrain.AddTriangle(centre, m1, junctionEdge.v3);
+                    terrain.AddTriangleColour(cell.Colour);
+
+                    // Triangulate river mesh here
+                }
+                else {
+                    terrain.AddTriangle(m1, junctionEdge.v1, junctionEdge.v2);
+                    terrain.AddTriangleColour(cell.Colour);
+                    terrain.AddTriangle(m1, junctionEdge.v2, m2);
+                    terrain.AddTriangleColour(cell.Colour);
+                    terrain.AddTriangle(m2, junctionEdge.v2, junctionEdge.v3);
+                    terrain.AddTriangleColour(cell.Colour);
+                    terrain.AddTriangle(centre, m1, m2);
+                    terrain.AddTriangleColour(cell.Colour);
+
+                    // Triangulate river mesh here
+                }
+            }
         }
 
         private void TriangulateSolidCell(HexDirection direction, Cell cell, Vector3 centre, Edge3 junctionEdge, Edge5 blendEdge){
             
-            TriangulateStrip(junctionEdge, blendEdge, cell.Colour, cell.Colour, terrain);
-            TriangulateFan(centre, junctionEdge, cell.Colour, terrain);
+            TriangulateStrip(junctionEdge, blendEdge, cell.Colour, cell.Colour);
+            TriangulateFan(centre, junctionEdge, cell.Colour);
         }
 
-        private void TriangulateFan(Vector3 v1, Edge3 e1, Color c1, HexMesh mesh)
+        private void TriangulateFan(Vector3 v1, Edge3 e1, Color c1)
         {
-            mesh.AddTriangle(v1, e1.v1, e1.v2);
-            mesh.AddTriangleColour(c1);
-            mesh.AddTriangle(v1, e1.v2, e1.v3);
-            mesh.AddTriangleColour(c1);
+            terrain.AddTriangle(v1, e1.v1, e1.v2);
+            terrain.AddTriangleColour(c1);
+            terrain.AddTriangle(v1, e1.v2, e1.v3);
+            terrain.AddTriangleColour(c1);
         }
 
-        private void TriangulateFan(Vector3 v1, Edge5 e1, Color c1, HexMesh mesh)
+        private void TriangulateFan(Vector3 v1, Edge5 e1, Color c1)
         {
-            mesh.AddTriangle(v1, e1.v1, e1.v2);
-            mesh.AddTriangleColour(c1);
-            mesh.AddTriangle(v1, e1.v2, e1.v3);
-            mesh.AddTriangleColour(c1);
-            mesh.AddTriangle(v1, e1.v3, e1.v4);
-            mesh.AddTriangleColour(c1);
-            mesh.AddTriangle(v1, e1.v4, e1.v5);
-            mesh.AddTriangleColour(c1);
+            terrain.AddTriangle(v1, e1.v1, e1.v2);
+            terrain.AddTriangleColour(c1);
+            terrain.AddTriangle(v1, e1.v2, e1.v3);
+            terrain.AddTriangleColour(c1);
+            terrain.AddTriangle(v1, e1.v3, e1.v4);
+            terrain.AddTriangleColour(c1);
+            terrain.AddTriangle(v1, e1.v4, e1.v5);
+            terrain.AddTriangleColour(c1);
         }
 
-        private void TriangulateStrip(Edge3 e1, Edge3 e2, Color c1, Color c2, HexMesh mesh)
+        private void TriangulateStrip(Edge3 e1, Edge3 e2, Color c1, Color c2)
         {
-            mesh.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
-            mesh.AddQuadColour(c1, c2);
-            mesh.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
-            mesh.AddQuadColour(c1, c2);
+            terrain.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
+            terrain.AddQuadColour(c1, c2);
+            terrain.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
+            terrain.AddQuadColour(c1, c2);
         }
 
-        private void TriangulateStrip(Edge5 e1, Edge5 e2, Color c1, Color c2, HexMesh mesh)
+        private void TriangulateStrip(Edge5 e1, Edge5 e2, Color c1, Color c2)
         {
-            mesh.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
-            mesh.AddQuadColour(c1, c2);
-            mesh.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
-            mesh.AddQuadColour(c1, c2);
-            mesh.AddQuad(e1.v3, e1.v4, e2.v3, e2.v4);
-            mesh.AddQuadColour(c1, c2);
-            mesh.AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
-            mesh.AddQuadColour(c1, c2);
+            terrain.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
+            terrain.AddQuadColour(c1, c2);
+            terrain.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
+            terrain.AddQuadColour(c1, c2);
+            terrain.AddQuad(e1.v3, e1.v4, e2.v3, e2.v4);
+            terrain.AddQuadColour(c1, c2);
+            terrain.AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
+            terrain.AddQuadColour(c1, c2);
         }
 
-        private void TriangulateStrip(Edge3 e1, Edge5 e2, Color c1, Color c2, HexMesh mesh)
+        private void TriangulateStrip(Edge3 e1, Edge5 e2, Color c1, Color c2)
         {
-            mesh.AddTriangle(e1.v1, e2.v1, e2.v2);
-            mesh.AddTriangleColour(c1, c2, c2);
-            mesh.AddQuad(e1.v1, e1.v2, e2.v2, e2.v3);
-            mesh.AddQuadColour(c1, c2);
-            mesh.AddQuad(e1.v2, e1.v3, e2.v3, e2.v4);
-            mesh.AddQuadColour(c1, c2);
-            mesh.AddTriangle(e1.v3, e2.v4, e2.v5);
-            mesh.AddTriangleColour(c1, c2, c2);
+            terrain.AddTriangle(e1.v1, e2.v1, e2.v2);
+            terrain.AddTriangleColour(c1, c2, c2);
+            terrain.AddQuad(e1.v1, e1.v2, e2.v2, e2.v3);
+            terrain.AddQuadColour(c1, c2);
+            terrain.AddQuad(e1.v2, e1.v3, e2.v3, e2.v4);
+            terrain.AddQuadColour(c1, c2);
+            terrain.AddTriangle(e1.v3, e2.v4, e2.v5);
+            terrain.AddTriangleColour(c1, c2, c2);
         }
     }
 }
