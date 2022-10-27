@@ -50,10 +50,7 @@ namespace World {
             get => colour;
             set
             {
-                if (colour == value)
-                {
-                    return;
-                }
+                if (colour == value) return;
                 colour = value;
                 RefreshNeighbours();
             }
@@ -65,10 +62,7 @@ namespace World {
             get => elevation;
             set
             {
-                if (elevation == value)
-                {
-                    return;
-                }
+                if (elevation == value) return;
                 elevation = value;
                 Vector3 position = transform.localPosition;
                 position.y = value * Config.ElevationStep;
@@ -80,7 +74,7 @@ namespace World {
 
                 if (HasOutgoingRiver)
                 {
-                    for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; direction++)
+                    for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; ++direction)
                     {
                         if (outgoingRivers[(int)direction] && elevation < GetNeighbour(direction).elevation)
                         {
@@ -92,7 +86,7 @@ namespace World {
 
                 if (HasIncomingRiver)
                 {
-                    for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; direction++)
+                    for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; ++direction)
                     {
                         if (incomingRivers[(int)direction] && elevation > GetNeighbour(direction).elevation)
                         {
@@ -103,7 +97,7 @@ namespace World {
 
                 if (HasRoad)
                 {
-                    for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; direction++)
+                    for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; ++direction)
                     {
                         if (GetElevationDifference(direction) > 1)
                         {
@@ -123,7 +117,7 @@ namespace World {
         private void RefreshNeighbours() {
             if (chunk) {
                 chunk.Refresh();
-                for (int i = 0; i < neighbours.Length; i++) {
+                for (int i = 0; i < neighbours.Length; ++i) {
                     Cell neighbour = neighbours[i];
                     if (neighbour != null && neighbour.chunk != chunk) neighbour.chunk.Refresh();
                 }
@@ -155,7 +149,7 @@ namespace World {
         public void RemoveOutgoingRivers() {
             if (!HasOutgoingRiver) return;
 
-            for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; direction++)
+            for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; ++direction)
             {
                 if (outgoingRivers[(int)direction])
                 {
@@ -180,7 +174,7 @@ namespace World {
         public void RemoveIncomingRivers() {
             if (!HasIncomingRiver) return;
 
-            for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; direction++)
+            for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; ++direction)
             {
                 RemoveIncomingRiver(direction);
             }
@@ -220,7 +214,7 @@ namespace World {
                 return;
             }
             
-            for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; direction++)
+            for (HexDirection direction = HexDirection.NE; direction <= HexDirection.N; ++direction)
             {
                 if (roads[(int)direction])
                 {

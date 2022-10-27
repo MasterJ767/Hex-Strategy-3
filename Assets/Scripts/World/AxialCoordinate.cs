@@ -55,12 +55,12 @@ namespace World {
             return new AxialCoordinate(iQ, iR);
         }
         
-        public override string ToString () {
-            return "(" + Q + ", " + S + ", " + R + ")";
-        }
-
-        public string ToStringOnSeparateLines () {
-            return Q + "\n" + S + "\n" + R;
-        }
+        public static AxialCoordinate operator +(AxialCoordinate a, AxialCoordinate b) => new AxialCoordinate(a.q + b.q, a.r + b.r);
+        public static AxialCoordinate operator -(AxialCoordinate a, AxialCoordinate b) => new AxialCoordinate(a.q - b.q, a.r - b.r);
+        public static AxialCoordinate operator *(AxialCoordinate a, int b) => new AxialCoordinate(a.q * b, a.r * b);
+        public static AxialCoordinate operator *(int a, AxialCoordinate b) => new AxialCoordinate(a * b.q, a * b.r);
+        
+        public override string ToString() => "(" + Q + ", " + S + ", " + R + ")";
+        public string ToStringOnSeparateLines() => Q + "\n" + S + "\n" + R;
     }
 }

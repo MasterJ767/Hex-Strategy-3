@@ -8,7 +8,7 @@ namespace Developer
     public class MapEditor : MonoBehaviour
     {
         public Color[] colours;
-        public Grid hexGrid;
+        public Grid grid;
         private Color activeColour;
         private int activeElevation;
         private bool applyColour;
@@ -34,7 +34,7 @@ namespace Developer
             RaycastHit hit;
             if (Physics.Raycast(inputRay, out hit))
             {
-                Cell currentCell = hexGrid.GetCell(hit.point);
+                Cell currentCell = grid.GetCell(hit.point);
                 if (previousCell && previousCell != currentCell) ValidateDrag(currentCell);
                 else isDrag = false;
                 EditCells(currentCell);
@@ -46,7 +46,7 @@ namespace Developer
         }
         
         private void ValidateDrag (Cell currentCell) {
-            for (dragDirection = HexDirection.NE; dragDirection <= HexDirection.N; dragDirection++) 
+            for (dragDirection = HexDirection.NE; dragDirection <= HexDirection.N; ++dragDirection) 
             {
                 if (previousCell.GetNeighbour(dragDirection) == currentCell) {
                     isDrag = true;
@@ -61,14 +61,14 @@ namespace Developer
             int centreR = centre.coordinates.R;
             int centreS = centre.coordinates.S;
 
-            for (int q = centreQ - brushSize; q <= centreQ + brushSize; q++)
+            for (int q = centreQ - brushSize; q <= centreQ + brushSize; ++q)
             {
-                for (int r = centreR - brushSize; r <= centreR + brushSize; r++)
+                for (int r = centreR - brushSize; r <= centreR + brushSize; ++r)
                 {
                     int s = -q - r;
                     if (s >= centreS - brushSize && s <= centreS + brushSize)
                     {
-                        EditCell(hexGrid.GetCell(new AxialCoordinate(q, r)));
+                        EditCell(grid.GetCell(new AxialCoordinate(q, r)));
                     }
                 }
             }
@@ -124,7 +124,7 @@ namespace Developer
         }
         
         public void ShowUI (bool visible) {
-            hexGrid.ShowUI(visible);
+            grid.ShowUI(visible);
         }
     }
 

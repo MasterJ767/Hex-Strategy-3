@@ -27,9 +27,9 @@ namespace World{
         private void CreateChunks() {
             chunks = new Chunk[Config.WorldWidthInChunks * Config.WorldHeightInChunks];
             
-            for (int x = 0, i = 0; x < Config.WorldWidthInChunks; x++) 
+            for (int x = 0, i = 0; x < Config.WorldWidthInChunks; ++x) 
             {
-                for (int z = 0; z < Config.WorldHeightInChunks; z++) 
+                for (int z = 0; z < Config.WorldHeightInChunks; ++z) 
                 {
                     Chunk chunk = chunks[i++] = Instantiate(chunkPrefab);
                     chunk.transform.SetParent(transform);
@@ -40,9 +40,9 @@ namespace World{
         private void CreateCells() {
             cells = new Cell[Config.WorldWidthInCells * Config.WorldHeightInCells];
 
-            for (int x = 0, i = 0; x < Config.WorldWidthInCells; x++)
+            for (int x = 0, i = 0; x < Config.WorldWidthInCells; ++x)
             {
-                for (int z = 0; z < Config.WorldHeightInCells; z++)
+                for (int z = 0; z < Config.WorldHeightInCells; ++z)
                 {
                     CreateCell(x, z, i++);
                 }
