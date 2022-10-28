@@ -18,6 +18,32 @@ namespace World {
             cells = new Cell[Config.ChunkWidth * Config.ChunkHeight];
             ShowUI(false);
         }
+
+        private void OnDrawGizmos() {
+            for (int i = 0; i < cells.Length; ++i)
+            {
+                Cell cell = cells[i];
+                Vector3 centre = cell.Position;
+                centre.y = cell.RiverSurfaceY;
+                Gizmos.color = Color.green;
+                Gizmos.DrawSphere(centre, 0.15f);
+                for (HexDirection d = HexDirection.NE; d <= HexDirection.N; ++d)
+                {
+                    if (!cell.HasRiver) continue;
+                    if (cell.HasRiverThroughEdge(d) || cell.HasRiverEnd) continue;
+
+                    centre = cell.Position;
+                    Vector3 m1 = Vector3.Lerp(centre, centre + Config.GetFirstJunctionCorner(d), 0.5f);
+                    m1.y = cell.RiverSurfaceY;
+                    Gizmos.color = Color.cyan;
+                    Gizmos.DrawSphere(m1, 0.15f);
+
+                    Vector3 m2 = Vector3.Lerp(centre, centre + Config.GetSecondJunctionCorner(d), 0.5f);
+                    Gizmos.color = Color.blue;
+                    Gizmos.DrawSphere(m2, 0.15f);
+                }
+            }
+        }
         
         private void LateUpdate() {
             TriangulateCells();
@@ -96,8 +122,8 @@ namespace World {
                 cellEdge.v3.y = cell.RiverBedY;
                 neighbourEdge.v3.y = neighbour.RiverBedY;
 
-                if (cell.outgoingRivers[(int)direction]) TriangulateStrip(Edge3.SetY(new Edge3(cellEdge, true), cell.RiverSurfaceY), Edge3.SetY(new Edge3(neighbourEdge, true), neighbour.RiverSurfaceY), 0f, 1f, 0.8f, 1f);
-                else TriangulateStrip(Edge3.SetY(new Edge3(cellEdge, true), cell.RiverSurfaceY), Edge3.SetY(new Edge3(neighbourEdge, true), cell.RiverSurfaceY), 1f, 0f, 1f, 0.8f);
+                if (cell.outgoingRivers[(int)direction]) TriangulateStrip(Edge3.SetY(new Edge3(cellEdge), cell.RiverSurfaceY), Edge3.SetY(new Edge3(neighbourEdge), neighbour.RiverSurfaceY), 0f, 1f, 0.8f, 1f);
+                else TriangulateStrip(Edge3.SetY(new Edge3(cellEdge), cell.RiverSurfaceY), Edge3.SetY(new Edge3(neighbourEdge), cell.RiverSurfaceY), 1f, 0f, 1f, 0.8f);
             }
 
             if (cell.HasRoadThroughEdge(direction)) {
@@ -230,7 +256,10 @@ namespace World {
                 junctionEdge.v2.y = cell.RiverBedY;
                 TriangulateSolidCell(direction, cell, centre, junctionEdge, blendEdge);
 
-                // Triangulate river mesh here
+                centre.y = cell.RiverSurfaceY;
+                if (cell.outgoingRivers[(int)direction]) TriangulateStrip(Edge3.SetY(junctionEdge, cell.RiverSurfaceY), Edge3.SetY(new Edge3(blendEdge), cell.RiverSurfaceY), 0f, 1f, 0.6f, 0.8f);
+                else TriangulateStrip(Edge3.SetY(junctionEdge, cell.RiverSurfaceY), Edge3.SetY(new Edge3(blendEdge), cell.RiverSurfaceY), 1f, 0f, 0.2f, 0f);
+                if (!cell.HasRiverEnd) TriangulateRiverTriangleLarge(direction, cell, centre, Edge3.SetY(junctionEdge, cell.RiverSurfaceY));
             }
             else if (cell.HasRiverEnd){
                 centre.y = cell.RiverBedY;
@@ -269,21 +298,28 @@ namespace World {
                 if ((int)direction.Previous() == previousRiver && (int)direction.Next() == nextRiver) {
                     TriangulateFan(centre, junctionEdge, cell.Colour);
 
-                    // Triangulate river mesh here
+                    centre.y = cell.RiverSurfaceY;
+                    TriangulateRiverTriangleLarge(direction, cell, centre, Edge3.SetY(junctionEdge, cell.RiverSurfaceY));
                 }
                 else if ((int)direction.Previous() == previousRiver) {
                     TriangulateFan(m2, junctionEdge, cell.Colour);
                     terrain.AddTriangle(centre, junctionEdge.v1, m2);
                     terrain.AddTriangleColour(cell.Colour);
 
-                    // Triangulate river mesh here
+                    centre.y = cell.RiverSurfaceY;
+                    m2.y = cell.RiverSurfaceY;
+                    junctionEdge.v1.y = cell.RiverSurfaceY;
+                    TriangulateRiverTriangleSmall(direction, cell, centre, junctionEdge.v1, m2);
                 }
                 else if ((int)direction.Next() == nextRiver) {
                     TriangulateFan(m1, junctionEdge, cell.Colour);
                     terrain.AddTriangle(centre, m1, junctionEdge.v3);
                     terrain.AddTriangleColour(cell.Colour);
 
-                    // Triangulate river mesh here
+                    centre.y = cell.RiverSurfaceY;
+                    m1.y = cell.RiverSurfaceY;
+                    junctionEdge.v3.y = cell.RiverSurfaceY;
+                    TriangulateRiverTriangleSmall(direction, cell, centre, m1, junctionEdge.v3);
                 }
                 else {
                     terrain.AddTriangle(m1, junctionEdge.v1, junctionEdge.v2);
@@ -295,8 +331,45 @@ namespace World {
                     terrain.AddTriangle(centre, m1, m2);
                     terrain.AddTriangleColour(cell.Colour);
 
-                    // Triangulate river mesh here
+                    centre.y = cell.RiverSurfaceY;
+                    m1.y = cell.RiverSurfaceY;
+                    m2.y = cell.RiverSurfaceY;
+                    TriangulateRiverTriangleSmall(direction, cell, centre, m1, m2);
                 }
+            }
+        }
+
+        private void TriangulateRiverTriangleLarge(HexDirection direction, Cell cell, Vector3 centre, Edge3 junctionEdge) {    
+            HexDirection outgoingDirection = cell.GetOutGoingRiver;
+            if (outgoingDirection == direction) TriangulateFan(centre, junctionEdge, 0.5f, 0f, 1f, 0.4f, 0.6f, 0.6f);
+            else if (outgoingDirection == direction.Previous()) TriangulateFan(centre, junctionEdge, 0.5f, 1f, 1f, 0.4f, 0.6f, 0.4f);
+            else if (outgoingDirection == direction.Previous2()) TriangulateFan(centre, junctionEdge, 0.5f, 1f, 1f, 0.4f, 0.4f, 0.2f);
+            else if (outgoingDirection == direction.Opposite()) TriangulateFan(centre, junctionEdge, 0.5f, 1f, 0f, 0.4f, 0.2f, 0.2f);
+            else if (outgoingDirection == direction.Next2()) TriangulateFan(centre, junctionEdge, 0.5f, 0f, 0f, 0.4f, 0.2f, 0.4f);
+            else TriangulateFan(centre, junctionEdge, 0.5f, 0f, 0f, 0.4f, 0.4f, 0.6f);
+        }
+
+        private void TriangulateRiverTriangleSmall(HexDirection direction, Cell cell, Vector3 centre, Vector3 v1, Vector3 v2) {
+            HexDirection outgoingDirection = cell.GetOutGoingRiver;
+            if (outgoingDirection == direction.Previous()) {
+                rivers.AddTriangle(centre, v1, v2);
+                rivers.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(1f, 0.6f), new Vector2(1f, 0.4f));
+            }
+            else if (outgoingDirection == direction.Next()) {
+                rivers.AddTriangle(centre, v1, v2);
+                rivers.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(0f, 0.4f), new Vector2(0f, 0.6f));
+            }
+            else if (outgoingDirection == direction.Opposite()) {
+                rivers.AddTriangle(centre, v1, v2);
+                rivers.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(1f, 0.2f), new Vector2(0f, 0.2f));
+            }
+            else if (outgoingDirection == direction.Previous2()) {
+                rivers.AddTriangle(centre, v1, v2);
+                rivers.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(1f, 0.4f), new Vector2(1f, 0.2f));
+            }
+            else if (outgoingDirection == direction.Next2()) {
+                rivers.AddTriangle(centre, v1, v2);
+                rivers.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(0f, 0.2f), new Vector2(0f, 0.4f));
             }
         }
 
@@ -306,23 +379,32 @@ namespace World {
             TriangulateFan(centre, junctionEdge, cell.Colour);
         }
 
-        private void TriangulateFan(Vector3 v1, Edge3 e1, Color c1)
+        private void TriangulateFan(Vector3 p1, Edge3 e1, Color c1)
         {
-            terrain.AddTriangle(v1, e1.v1, e1.v2);
+            terrain.AddTriangle(p1, e1.v1, e1.v2);
             terrain.AddTriangleColour(c1);
-            terrain.AddTriangle(v1, e1.v2, e1.v3);
+            terrain.AddTriangle(p1, e1.v2, e1.v3);
             terrain.AddTriangleColour(c1);
         }
 
-        private void TriangulateFan(Vector3 v1, Edge5 e1, Color c1)
+        private void TriangulateFan(Vector3 p1, Edge3 e1, float u1, float u2, float u3, float v1, float v2, float v3) {
+            float um = (v1 + v2) / 2; 
+            float vm = (v2 + v3) / 2;
+            rivers.AddTriangle(p1, e1.v1, e1.v2);
+            rivers.AddTriangleUV(new Vector2(u1, v1), new Vector2(u2, v2), new Vector2(um, vm));
+            rivers.AddTriangle(p1, e1.v2, e1.v3);
+            rivers.AddTriangleUV(new Vector2(u1, v1), new Vector2(um, vm), new Vector2(u3, v3));
+        }
+
+        private void TriangulateFan(Vector3 p1, Edge5 e1, Color c1)
         {
-            terrain.AddTriangle(v1, e1.v1, e1.v2);
+            terrain.AddTriangle(p1, e1.v1, e1.v2);
             terrain.AddTriangleColour(c1);
-            terrain.AddTriangle(v1, e1.v2, e1.v3);
+            terrain.AddTriangle(p1, e1.v2, e1.v3);
             terrain.AddTriangleColour(c1);
-            terrain.AddTriangle(v1, e1.v3, e1.v4);
+            terrain.AddTriangle(p1, e1.v3, e1.v4);
             terrain.AddTriangleColour(c1);
-            terrain.AddTriangle(v1, e1.v4, e1.v5);
+            terrain.AddTriangle(p1, e1.v4, e1.v5);
             terrain.AddTriangleColour(c1);
         }
 

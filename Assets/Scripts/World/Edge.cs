@@ -36,10 +36,10 @@ namespace World {
             v3 = end;
         }
 
-        public Edge3(Edge5 e1, bool extractMiddle) {
-            v1 = !extractMiddle ? e1.v1 : e1.v2;
+        public Edge3(Edge5 e1) {
+            v1 = e1.v2;
             v2 = e1.v3;
-            v3 = !extractMiddle ? e1.v5 : e1.v4;
+            v3 = e1.v4;
         }
 
         public static Edge3 SetY(Edge3 e, float y){
