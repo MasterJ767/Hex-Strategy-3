@@ -9,13 +9,21 @@ namespace World{
         public Chunk chunkPrefab;
         public TextMeshProUGUI cellLabelPrefab;
 
+        public Texture2D noiseSource;
+
         private Cell[] cells;
         private Chunk[] chunks;
 
         private void Awake()
         {
+            Config.NoiseSource = noiseSource;
+
             CreateChunks();
             CreateCells();
+        }
+
+        private void OnEnable() {
+            Config.NoiseSource = noiseSource;
         }
 
         public void ShowUI (bool visible) {

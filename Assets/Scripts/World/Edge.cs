@@ -64,6 +64,32 @@ namespace World {
             e3.v3 = Vector3.Lerp(e1.v3, e2.v3, step);
             return e3;
         }
+
+        public static Edge3 Reverse(Edge3 e) {
+            Edge3 result;
+            result.v1 = e.v3;
+            result.v2 = e.v2;
+            result.v3 = e.v1;
+            return result;
+        }
+
+        public static Edge3 Perturb(Edge3 e)
+        {
+            Edge3 result;
+            result.v1 = Config.Perturb(e.v1);
+            result.v2 = Config.Perturb(e.v2);
+            result.v3 = Config.Perturb(e.v3);
+            return result;
+        }
+
+        public static Edge3 PerturbInRelation(Edge3 e1, Edge5 e2)
+        {
+            Edge3 result;
+            result.v1 = Config.PerturbInRelation(e1.v1, e2.v1);
+            result.v2 = Config.PerturbInRelation(e1.v2, e2.v3);
+            result.v3 = Config.PerturbInRelation(e1.v3, e2.v5);
+            return result;
+        }
     }
 
     public struct Edge5 {
@@ -116,6 +142,27 @@ namespace World {
             e3.v4 = Vector3.Lerp(e1.v4, e2.v4, step);
             e3.v5 = Vector3.Lerp(e1.v5, e2.v5, step);
             return e3;
+        }
+
+        public static Edge5 Reverse(Edge5 e) {
+            Edge5 result;
+            result.v1 = e.v5;
+            result.v2 = e.v4;
+            result.v3 = e.v3;
+            result.v4 = e.v2;
+            result.v5 = e.v1;
+            return result;
+        }
+
+        public static Edge5 Perturb(Edge5 e)
+        {
+            Edge5 result;
+            result.v1 = Config.Perturb(e.v1);
+            result.v2 = Config.Perturb(e.v2);
+            result.v3 = Config.Perturb(e.v3);
+            result.v4 = Config.Perturb(e.v4);
+            result.v5 = Config.Perturb(e.v5);
+            return result;
         }
     }
 }

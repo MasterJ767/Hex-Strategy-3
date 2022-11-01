@@ -9579,6 +9579,7 @@ MonoBehaviour:
     type: 3}
   cellLabelPrefab: {fileID: 8467621803044486670, guid: 20ce394c3e9f3504db5db75f8a7a63f6,
     type: 3}
+  noiseSource: {fileID: 2800000, guid: 090059a6e51491f419c0669269094e48, type: 3}
 --- !u!1 &2146608558
 GameObject:
   m_ObjectHideFlags: 0

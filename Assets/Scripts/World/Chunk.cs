@@ -63,15 +63,17 @@ namespace World {
 
         private void Triangulate(HexDirection direction, Cell cell) {
             Vector3 centre = cell.Position;
-            Vector3 v1 = centre + Config.GetFirstBlendCorner(direction);
-            Vector3 v2 = centre + Config.GetSecondBlendCorner(direction);
-            Edge5 blendEdge = new Edge5(v1, v2);
+            Vector3 v1 = Config.GetFirstBlendCorner(centre, direction);
+            Vector3 v2 = Config.GetSecondBlendCorner(centre, direction);
+            Edge5 rawBlendEdge = new Edge5(v1, v2);
+            Edge5 blendEdge = Edge5.Perturb(rawBlendEdge);
 
             if ((int)direction < 3) TriangulateBlend(direction, cell, blendEdge);
 
-            Vector3 v3 = centre + Config.GetFirstJunctionCorner(direction);
-            Vector3 v4 = centre + Config.GetSecondJunctionCorner(direction);
+            Vector3 v3 = Config.GetFirstJunctionCorner(centre, direction);
+            Vector3 v4 = Config.GetSecondJunctionCorner(centre, direction);
             Edge3 junctionEdge = new Edge3(v3, v4);
+            junctionEdge = Edge3.PerturbInRelation(junctionEdge, rawBlendEdge);
 
             if (cell.HasRiver) TriangulateRiverCell(direction, cell, centre, junctionEdge, blendEdge);
             else TriangulateSolidCell(direction, cell, centre, junctionEdge, blendEdge);
@@ -83,16 +85,17 @@ namespace World {
             Cell neighbour = cell.GetNeighbour(direction);
             if (neighbour == null) return;
 
-            Vector3 v1 = neighbour.Position + Config.GetSecondBlendCorner(direction.Opposite());
-            Vector3 v2 = neighbour.Position + Config.GetFirstBlendCorner(direction.Opposite());
-            Edge5 neightbourBlendEdge = new Edge5(v1, v2);
-            TriangulateBridge(direction, cell, neighbour, blendEdge, neightbourBlendEdge);
+            Vector3 v1 = Config.GetFirstBlendCorner(neighbour.Position, direction.Opposite());
+            Vector3 v2 = Config.GetSecondBlendCorner(neighbour.Position, direction.Opposite());
+            Edge5 neighbourBlendEdge = new Edge5(v1, v2);
+            neighbourBlendEdge = Edge5.Reverse(Edge5.Perturb(neighbourBlendEdge));
+            TriangulateBridge(direction, cell, neighbour, blendEdge, neighbourBlendEdge);
 
             Cell neighbour2 = cell.GetNeighbour(direction.Next());
             if ((int)direction >= 2 || neighbour2 == null) return;
 
-            Vector3 v3 = neighbour2.Position + Config.GetSecondBlendCorner(direction.Next().Opposite());
-            TriangulateCorner(cell, neighbour, neighbour2, blendEdge.v5, neightbourBlendEdge.v5, v3);
+            Vector3 v3 = Config.Perturb(Config.GetSecondBlendCorner(neighbour2.Position, direction.Next().Opposite()));
+            TriangulateCorner(cell, neighbour, neighbour2, blendEdge.v5, neighbourBlendEdge.v5, v3);
         }
 
         private void TriangulateBridge(HexDirection direction, Cell cell, Cell neighbour, Edge5 cellEdge, Edge5 neighbourEdge){

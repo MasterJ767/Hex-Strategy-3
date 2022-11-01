@@ -40,9 +40,9 @@ namespace World {
         
         public bool HasRoadThroughEdge(HexDirection direction) => roads[(int)direction];
 
-        public float RiverBedY => (elevation + Config.RiverBedElevationOffset) * Config.ElevationStep;
+        public float RiverBedY => Position.y + Config.RiverBedElevationOffset;
 
-        public float RiverSurfaceY => (elevation + Config.RiverSurfaceElevationOffset) * Config.ElevationStep;
+        public float RiverSurfaceY => Position.y + Config.RiverSurfaceElevationOffset;
         
         private Color colour;
         public Color Colour
@@ -66,6 +66,7 @@ namespace World {
                 elevation = value;
                 Vector3 position = transform.localPosition;
                 position.y = value * Config.ElevationStep;
+                position.y += (Config.SampleNoise(position).y * 2f - 1f) * Config.ElevationPerturbStrength;
                 transform.localPosition = position;
                 
                 Vector3 uiPosition = uiTransform.localPosition;
@@ -233,7 +234,7 @@ namespace World {
                 SetRoad(direction, true);
                 GetNeighbour(direction).SetRoad(direction, true);
             }
-            
+
         }
 
         public void SetRoad(HexDirection direction, bool state) {
