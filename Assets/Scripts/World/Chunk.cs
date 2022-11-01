@@ -465,9 +465,9 @@ namespace World {
         }
 
         private void TriangulateFan(Vector3 p1, Edge3 e1, float u) {
-            roads.AddTriangle(p1 + Config.RoadElevationOffset, e1.v1 + Config.RoadElevationOffset, e1.v2 + Config.RoadElevationOffset);
+            roads.AddTriangle(p1, e1.v1, e1.v2);
             roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(u, 0f));
-            roads.AddTriangle(p1 + Config.RoadElevationOffset, e1.v2 + Config.RoadElevationOffset, e1.v3 + Config.RoadElevationOffset);
+            roads.AddTriangle(p1, e1.v2, e1.v3);
             roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(u, 0f), new Vector2(0f, 0f));
         }
 
@@ -498,9 +498,9 @@ namespace World {
         }
 
         private void TriangulateStrip(Edge3 e1, Edge3 e2) {
-            roads.AddQuad(e1.v1 + Config.RoadElevationOffset, e1.v2 + Config.RoadElevationOffset, e2.v1 + Config.RoadElevationOffset, e2.v2 + Config.RoadElevationOffset);
+            roads.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
             roads.AddQuadUV(new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(1f, 0f));
-            roads.AddQuad(e1.v2 + Config.RoadElevationOffset, e1.v3 + Config.RoadElevationOffset, e2.v2 + Config.RoadElevationOffset, e2.v3 + Config.RoadElevationOffset);
+            roads.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
             roads.AddQuadUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f));
         }
 
