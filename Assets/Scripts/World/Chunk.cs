@@ -15,34 +15,10 @@ namespace World {
         private void Awake () {
             gridCanvas = GetComponentInChildren<Canvas>();
 
+            roads.transform.position = Config.RoadElevationOffset;
+
             cells = new Cell[Config.ChunkWidth * Config.ChunkHeight];
             ShowUI(false);
-        }
-
-        private void OnDrawGizmos() {
-            for (int i = 0; i < cells.Length; ++i)
-            {
-                Cell cell = cells[i];
-                Vector3 centre = cell.Position;
-                centre.y = cell.RiverSurfaceY;
-                Gizmos.color = Color.green;
-                Gizmos.DrawSphere(centre, 0.15f);
-                for (HexDirection d = HexDirection.NE; d <= HexDirection.N; ++d)
-                {
-                    if (!cell.HasRiver) continue;
-                    if (cell.HasRiverThroughEdge(d) || cell.HasRiverEnd) continue;
-
-                    centre = cell.Position;
-                    Vector3 m1 = Vector3.Lerp(centre, centre + Config.GetFirstJunctionCorner(d), 0.5f);
-                    m1.y = cell.RiverSurfaceY;
-                    Gizmos.color = Color.cyan;
-                    Gizmos.DrawSphere(m1, 0.15f);
-
-                    Vector3 m2 = Vector3.Lerp(centre, centre + Config.GetSecondJunctionCorner(d), 0.5f);
-                    Gizmos.color = Color.blue;
-                    Gizmos.DrawSphere(m2, 0.15f);
-                }
-            }
         }
         
         private void LateUpdate() {
@@ -99,6 +75,8 @@ namespace World {
 
             if (cell.HasRiver) TriangulateRiverCell(direction, cell, centre, junctionEdge, blendEdge);
             else TriangulateSolidCell(direction, cell, centre, junctionEdge, blendEdge);
+
+            if (cell.HasRoad) TriangulateRoadCell(direction, cell, centre, junctionEdge, blendEdge);
         }
 
         private void TriangulateBlend(HexDirection direction, Cell cell, Edge5 blendEdge) {
@@ -123,20 +101,21 @@ namespace World {
                 neighbourEdge.v3.y = neighbour.RiverBedY;
 
                 if (cell.outgoingRivers[(int)direction]) TriangulateStrip(Edge3.SetY(new Edge3(cellEdge), cell.RiverSurfaceY), Edge3.SetY(new Edge3(neighbourEdge), neighbour.RiverSurfaceY), 0f, 1f, 0.8f, 1f);
-                else TriangulateStrip(Edge3.SetY(new Edge3(cellEdge), cell.RiverSurfaceY), Edge3.SetY(new Edge3(neighbourEdge), cell.RiverSurfaceY), 1f, 0f, 1f, 0.8f);
+                else TriangulateStrip(Edge3.SetY(new Edge3(cellEdge), cell.RiverSurfaceY), Edge3.SetY(new Edge3(neighbourEdge), neighbour.RiverSurfaceY), 1f, 0f, 1f, 0.8f);
             }
 
-            if (cell.HasRoadThroughEdge(direction)) {
-
-                // Triangulate Road Quad here
+            if (cell.GetElevationDifference(direction) == 1) {
+                if (cell.HasRoadThroughEdge(direction)) TriangulateBridgeTerraceRoad(cell, neighbour, cellEdge, neighbourEdge);
+                else TriangulateBridgeTerrace(cell, neighbour, cellEdge, neighbourEdge);
             }
-
-            if (cell.GetElevationDifference(direction) == 1) TriangulateBridgeTerrace(cell, neighbour, cellEdge, neighbourEdge);
-            else TriangulateStrip(cellEdge, neighbourEdge, cell.Colour, neighbour.Colour);
+            else {
+                TriangulateStrip(cellEdge, neighbourEdge, cell.Colour, neighbour.Colour);
+                if (cell.HasRoadThroughEdge(direction)) TriangulateStrip(new Edge3(cellEdge), new Edge3(neighbourEdge));
+            }
         }
 
         private void TriangulateBridgeTerrace(Cell cell, Cell neighbour, Edge5 cellEdge, Edge5 neighbourEdge){
-            for (int i = 0; i < Config.TerraceSteps; ++i){
+            for (int i = 0; i < Config.TerraceSteps; ++i) {
                 Edge5 e1 = Edge5.TerraceLerp(cellEdge, neighbourEdge, i);
                 Edge5 e2 = Edge5.TerraceLerp(cellEdge, neighbourEdge, i + 1);
                 Color c1 = Edge.TerraceColourLerp(cell.Colour, neighbour.Colour, i);
@@ -144,6 +123,37 @@ namespace World {
 
                 TriangulateStrip(e1, e2, c1, c2);
             }
+        }
+
+        private void TriangulateBridgeTerraceRoad(Cell cell, Cell neighbour, Edge5 cellEdge, Edge5 neighbourEdge) {
+            float ratioXZ = 1 / (Config.TerraceSteps / 2);
+            float ratioY = 1 / ((Config.TerraceSteps / 2) + 1);
+
+            for (int i = 0; i < Config.TerraceSteps; ++i) {
+                Edge5 e1 = Edge5.TerraceLerp(cellEdge, neighbourEdge, i);
+                Edge5 e2 = Edge5.TerraceLerp(cellEdge, neighbourEdge, i + 1);
+                Color c1 = Edge.TerraceColourLerp(cell.Colour, neighbour.Colour, i);
+                Color c2 = Edge.TerraceColourLerp(cell.Colour, neighbour.Colour, i + 1);
+
+                terrain.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
+                terrain.AddQuadColour(c1, c2);
+                terrain.AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
+                terrain.AddQuadColour(c1, c2);
+
+                if (i < Config.TerraceSteps - 2) {
+                    Edge5 e3 = Edge5.TerraceLerp(cellEdge, neighbourEdge, i + 2);
+                    Edge5 e4 = Edge5.TerraceLerp(cellEdge, neighbourEdge, i + 3);
+                    Color c3 = Edge.TerraceColourLerp(cell.Colour, neighbour.Colour, i + 2);
+                    Color c4 = Edge.TerraceColourLerp(cell.Colour, neighbour.Colour, i + 3);
+
+                    terrain.AddQuad(e1.v2, e2.v2, e3.v2, e4.v2);
+                    terrain.AddQuadColour(c1, c2, c3, c4);
+                    terrain.AddQuad(e1.v4, e2.v4, e3.v4, e4.v4);
+                    terrain.AddQuadColour(c1, c2, c3, c4);
+                }
+            }
+
+            TriangulateStrip(new Edge3(cellEdge), new Edge3(neighbourEdge));
         }
 
         private void TriangulateCorner(Cell cell, Cell neighbour, Cell neighbour2, Vector3 cellCorner, Vector3 neighbourCorner, Vector3 neighbour2Corner) {
@@ -254,7 +264,8 @@ namespace World {
                 centre.y = cell.RiverBedY;
                 blendEdge.v3.y = cell.RiverBedY;
                 junctionEdge.v2.y = cell.RiverBedY;
-                TriangulateSolidCell(direction, cell, centre, junctionEdge, blendEdge);
+                TriangulateStrip(junctionEdge, blendEdge, cell.Colour, cell.Colour);
+                TriangulateFan(centre, junctionEdge, cell.Colour);
 
                 centre.y = cell.RiverSurfaceY;
                 if (cell.outgoingRivers[(int)direction]) TriangulateStrip(Edge3.SetY(junctionEdge, cell.RiverSurfaceY), Edge3.SetY(new Edge3(blendEdge), cell.RiverSurfaceY), 0f, 1f, 0.6f, 0.8f);
@@ -263,7 +274,8 @@ namespace World {
             }
             else if (cell.HasRiverEnd){
                 centre.y = cell.RiverBedY;
-                TriangulateSolidCell(direction, cell, centre, junctionEdge, blendEdge);
+                TriangulateStrip(junctionEdge, blendEdge, cell.Colour, cell.Colour);
+                TriangulateFan(centre, junctionEdge, cell.Colour);
 
                 // Triangulate river mesh here
             }
@@ -373,14 +385,67 @@ namespace World {
             }
         }
 
-        private void TriangulateSolidCell(HexDirection direction, Cell cell, Vector3 centre, Edge3 junctionEdge, Edge5 blendEdge){
-            
+        private void TriangulateSolidCell(HexDirection direction, Cell cell, Vector3 centre, Edge3 junctionEdge, Edge5 blendEdge) {
             TriangulateStrip(junctionEdge, blendEdge, cell.Colour, cell.Colour);
             TriangulateFan(centre, junctionEdge, cell.Colour);
         }
 
-        private void TriangulateFan(Vector3 p1, Edge3 e1, Color c1)
-        {
+        private void TriangulateRoadCell(HexDirection direction, Cell cell, Vector3 centre, Edge3 junctionEdge, Edge5 blendEdge) {
+            if (cell.HasRoadThroughEdge(direction)) {
+                    TriangulateStrip(junctionEdge, new Edge3(blendEdge));
+                    TriangulateFan(centre, junctionEdge, 1f);
+            }
+            else {
+                int previousRoad = -1;
+                int nextRoad = -1;
+
+                for (int pDir = Config.Mod((int)direction - 1, 6); pDir != (int)direction; pDir = Config.Mod(pDir - 1, 6))
+                {
+                    if (cell.HasRoadThroughEdge((HexDirection)pDir))
+                    {
+                        previousRoad = pDir;
+                        break;
+                    }
+                }
+
+                for (int nDir = Config.Mod((int)direction + 1, 6); nDir != (int)direction; nDir = Config.Mod(nDir + 1, 6))
+                {
+                    if (cell.HasRoadThroughEdge((HexDirection)nDir))
+                    {
+                        nextRoad = nDir;
+                        break;
+                    }
+                }
+
+                Vector3 m1 = Vector3.Lerp(centre, junctionEdge.v1, 0.5f);
+                Vector3 m2 = Vector3.Lerp(centre, junctionEdge.v3, 0.5f);
+
+                if ((int)direction.Previous() == previousRoad && (int)direction.Next() == nextRoad) TriangulateRoadWedge(centre, junctionEdge);
+                else if ((int)direction.Previous() == previousRoad) TriangulateRoadTriangle(centre, junctionEdge.v1, m2);
+                else if ((int)direction.Next() == nextRoad) TriangulateRoadTriangle(centre, m1, junctionEdge.v3);
+                else TriangulateRoadTriangle(centre, m1, m2);
+            }
+        }
+
+        private void TriangulateRoadTriangle(Vector3 centre, Vector3 v1, Vector3 v2) {
+            roads.AddTriangle(centre, v1, v2);
+            roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+        }
+
+        private void TriangulateRoadWedge(Vector3 centre, Edge3 junctionEdge) {
+            float mx = centre.x + junctionEdge.v1.x + junctionEdge.v3.x;
+            mx /= 3;
+            float mz = centre.z + junctionEdge.v1.z + junctionEdge.v3.z;
+            mz /= 3;
+            Vector3 m = new Vector3(mx, centre.y, mz);
+
+            roads.AddTriangle(centre, junctionEdge.v1, m);
+            roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+            roads.AddTriangle(centre, m, junctionEdge.v3);
+            roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+        }
+
+        private void TriangulateFan(Vector3 p1, Edge3 e1, Color c1) {
             terrain.AddTriangle(p1, e1.v1, e1.v2);
             terrain.AddTriangleColour(c1);
             terrain.AddTriangle(p1, e1.v2, e1.v3);
@@ -396,8 +461,14 @@ namespace World {
             rivers.AddTriangleUV(new Vector2(u1, v1), new Vector2(um, vm), new Vector2(u3, v3));
         }
 
-        private void TriangulateFan(Vector3 p1, Edge5 e1, Color c1)
-        {
+        private void TriangulateFan(Vector3 p1, Edge3 e1, float u) {
+            roads.AddTriangle(p1 + Config.RoadElevationOffset, e1.v1 + Config.RoadElevationOffset, e1.v2 + Config.RoadElevationOffset);
+            roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(u, 0f));
+            roads.AddTriangle(p1 + Config.RoadElevationOffset, e1.v2 + Config.RoadElevationOffset, e1.v3 + Config.RoadElevationOffset);
+            roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(u, 0f), new Vector2(0f, 0f));
+        }
+
+        private void TriangulateFan(Vector3 p1, Edge5 e1, Color c1) {
             terrain.AddTriangle(p1, e1.v1, e1.v2);
             terrain.AddTriangleColour(c1);
             terrain.AddTriangle(p1, e1.v2, e1.v3);
@@ -408,15 +479,14 @@ namespace World {
             terrain.AddTriangleColour(c1);
         }
 
-        private void TriangulateStrip(Edge3 e1, Edge3 e2, Color c1, Color c2)
-        {
+        private void TriangulateStrip(Edge3 e1, Edge3 e2, Color c1, Color c2) {
             terrain.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
             terrain.AddQuadColour(c1, c2);
             terrain.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
             terrain.AddQuadColour(c1, c2);
         }
 
-        private void TriangulateStrip(Edge3 e1, Edge3 e2, float u1, float u2, float v1, float v2){
+        private void TriangulateStrip(Edge3 e1, Edge3 e2, float u1, float u2, float v1, float v2) {
             float um = (u1 + u2) / 2;
             rivers.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
             rivers.AddQuadUV(new Vector2(u1, v1), new Vector2(um, v1), new Vector2(u1, v2), new Vector2(um, v2));
@@ -424,8 +494,14 @@ namespace World {
             rivers.AddQuadUV(new Vector2(um, v1), new Vector2(u2, v1), new Vector2(um, v2), new Vector2(u2, v2));
         }
 
-        private void TriangulateStrip(Edge5 e1, Edge5 e2, Color c1, Color c2)
-        {
+        private void TriangulateStrip(Edge3 e1, Edge3 e2) {
+            roads.AddQuad(e1.v1 + Config.RoadElevationOffset, e1.v2 + Config.RoadElevationOffset, e2.v1 + Config.RoadElevationOffset, e2.v2 + Config.RoadElevationOffset);
+            roads.AddQuadUV(new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(1f, 0f));
+            roads.AddQuad(e1.v2 + Config.RoadElevationOffset, e1.v3 + Config.RoadElevationOffset, e2.v2 + Config.RoadElevationOffset, e2.v3 + Config.RoadElevationOffset);
+            roads.AddQuadUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f));
+        }
+
+        private void TriangulateStrip(Edge5 e1, Edge5 e2, Color c1, Color c2) {
             terrain.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
             terrain.AddQuadColour(c1, c2);
             terrain.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
@@ -436,8 +512,7 @@ namespace World {
             terrain.AddQuadColour(c1, c2);
         }
 
-        private void TriangulateStrip(Edge3 e1, Edge5 e2, Color c1, Color c2)
-        {
+        private void TriangulateStrip(Edge3 e1, Edge5 e2, Color c1, Color c2) {
             terrain.AddTriangle(e1.v1, e2.v1, e2.v2);
             terrain.AddTriangleColour(c1, c2, c2);
             terrain.AddQuad(e1.v1, e1.v2, e2.v2, e2.v3);

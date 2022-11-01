@@ -111,7 +111,6 @@ GameObject:
   - component: {fileID: 7974792183853762955}
   - component: {fileID: 7974792183853762967}
   - component: {fileID: 7974792183853762964}
-  - component: {fileID: 7974792183853762965}
   - component: {fileID: 7974792183853762954}
   m_Layer: 0
   m_Name: Roads
@@ -185,54 +184,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &7974792183853762965
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7974792183853762952}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26d6499a6bd256e47b859377446493a1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IsGlobal: 1
-  fadeRadius: 0
-  priority: 50
-  customPasses:
-  - rid: 2732344192161808384
-  injectionPoint: 0
-  m_TargetCamera: {fileID: 0}
-  useTargetCamera: 0
-  references:
-    version: 2
-    RefIds:
-    - rid: 2732344192161808384
-      type: {class: DrawRenderersCustomPass, ns: UnityEngine.Rendering.HighDefinition,
-        asm: Unity.RenderPipelines.HighDefinition.Runtime}
-      data:
-        m_Name: Custom Pass
-        enabled: 1
-        targetColorBuffer: 0
-        targetDepthBuffer: 0
-        clearFlags: 2
-        passFoldout: 0
-        m_Version: 0
-        filterFoldout: 1
-        rendererFoldout: 1
-        renderQueueType: 2
-        layerMask:
-          serializedVersion: 2
-          m_Bits: 1
-        sortingCriteria: -1
-        overrideMaterial: {fileID: 0}
-        overrideMaterialPassIndex: 0
-        overrideMaterialPassName: Forward
-        overrideDepthState: 1
-        depthCompareFunction: 6
-        depthWrite: 1
-        shaderPass: 0
 --- !u!114 &7974792183853762954
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -224,7 +224,16 @@ namespace World {
         }
 
         public void AddRoad(HexDirection direction) {
-            if (GetElevationDifference(direction) <= 1 && !roads[(int)direction] && !HasRiverThroughEdge(direction)) SetRoad(direction, true);
+            Cell neighbour = GetNeighbour(direction);
+            if (GetElevationDifference(direction) > 1 || roads[(int)direction] || HasRiverThroughEdge(direction)) return;
+            if (!neighbour.HasRiver && !HasRiver) {
+                SetRoad(direction, true);
+            }
+            else if (neighbour.HasRiver && !neighbour.HasRoad && !GetNeighbour(direction).HasRiverThroughEdge(direction)) {
+                SetRoad(direction, true);
+                GetNeighbour(direction).SetRoad(direction, true);
+            }
+            
         }
 
         public void SetRoad(HexDirection direction, bool state) {

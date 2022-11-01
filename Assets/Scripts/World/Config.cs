@@ -25,6 +25,8 @@ namespace World {
         public static readonly float RiverBedElevationOffset = -1.5f;
         public static readonly float RiverSurfaceElevationOffset = -0.25f;
 
+        public static readonly Vector3 RoadElevationOffset = new Vector3(0f, 0.0005f, 0f);
+
         private static readonly Vector3[] Corners = {
             new(0.5f * OuterRadius, 0f, InnerRadius), //top right corner
             new(OuterRadius, 0f, 0f), //centre right corner

@@ -56,6 +56,14 @@ namespace World {
             e3.v3 = Edge.TerraceLerp(e1.v3, e2.v3, step);
             return e3;
         }
+
+        public static Edge3 Lerp(Edge3 e1, Edge3 e2, float step) {
+            Edge3 e3;
+            e3.v1 = Vector3.Lerp(e1.v1, e2.v1, step);
+            e3.v2 = Vector3.Lerp(e1.v2, e2.v2, step);
+            e3.v3 = Vector3.Lerp(e1.v3, e2.v3, step);
+            return e3;
+        }
     }
 
     public struct Edge5 {
@@ -97,6 +105,16 @@ namespace World {
             e3.v3 = Edge.TerraceLerp(e1.v3, e2.v3, step);
             e3.v4 = Edge.TerraceLerp(e1.v4, e2.v4, step);
             e3.v5 = Edge.TerraceLerp(e1.v5, e2.v5, step);
+            return e3;
+        }
+
+        public static Edge5 Lerp(Edge5 e1, Edge5 e2, float step) {
+            Edge5 e3;
+            e3.v1 = Vector3.Lerp(e1.v1, e2.v1, step);
+            e3.v2 = Vector3.Lerp(e1.v2, e2.v2, step);
+            e3.v3 = Vector3.Lerp(e1.v3, e2.v3, step);
+            e3.v4 = Vector3.Lerp(e1.v4, e2.v4, step);
+            e3.v5 = Vector3.Lerp(e1.v5, e2.v5, step);
             return e3;
         }
     }

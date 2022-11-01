@@ -80,7 +80,7 @@ namespace Developer
                 if (applyColour) cell.Colour = activeColour;
                 if (applyElevation) cell.Elevation = activeElevation;
                 if (riverMode == OptionalToggle.No) cell.RemoveRiver();
-                if (roadMode == OptionalToggle.No) cell.RemoveRiver();
+                if (roadMode == OptionalToggle.No) cell.RemoveRoad();
                 if (isDrag) {
                     Cell otherCell = cell.GetNeighbour(dragDirection.Opposite());
                     if (otherCell) {
