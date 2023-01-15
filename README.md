@@ -3,7 +3,7 @@ Hex Strategy Game
 
 This work-in-progress game is a unity project inspired by Civilisation VI and Humankind. 
 
-This is the second iteration of the project. The first followed the Catlike Coding tutorial more strictly. This version follows my own implementations for most aspects.
+This is the second iteration of the project. The first followed the Catlike Coding tutorial more strictly. This version uses my own implementations but follows the tutorial series for a suggested structure on when to include which features. 
 
 How to Use
 -------------
