@@ -49,39 +49,6 @@ namespace World {
             return e;
         }
 
-        public static Edge3 TerraceLerp(Edge3 e1, Edge3 e2, int step){
-            Edge3 e3;
-            e3.v1 = Edge.TerraceLerp(e1.v1, e2.v1, step);
-            e3.v2 = Edge.TerraceLerp(e1.v2, e2.v2, step);
-            e3.v3 = Edge.TerraceLerp(e1.v3, e2.v3, step);
-            return e3;
-        }
-
-        public static Edge3 Lerp(Edge3 e1, Edge3 e2, float step) {
-            Edge3 e3;
-            e3.v1 = Vector3.Lerp(e1.v1, e2.v1, step);
-            e3.v2 = Vector3.Lerp(e1.v2, e2.v2, step);
-            e3.v3 = Vector3.Lerp(e1.v3, e2.v3, step);
-            return e3;
-        }
-
-        public static Edge3 Reverse(Edge3 e) {
-            Edge3 result;
-            result.v1 = e.v3;
-            result.v2 = e.v2;
-            result.v3 = e.v1;
-            return result;
-        }
-
-        public static Edge3 Perturb(Edge3 e)
-        {
-            Edge3 result;
-            result.v1 = Config.Perturb(e.v1);
-            result.v2 = Config.Perturb(e.v2);
-            result.v3 = Config.Perturb(e.v3);
-            return result;
-        }
-
         public static Edge3 PerturbInRelation(Edge3 e1, Edge5 e2)
         {
             Edge3 result;
@@ -107,14 +74,6 @@ namespace World {
             v5 = end;
         }
 
-        public Edge5(Edge3 e1) {
-            v1 = e1.v1;
-            v2 = Vector3.Lerp(e1.v1, e1.v2, 0.5f);
-            v3 = e1.v2;
-            v4 = Vector3.Lerp(e1.v2, e1.v3, 0.5f);
-            v5 = e1.v3;
-        }
-
         public static Edge5 SetY(Edge5 e, float y){
             e.v1.y = y;
             e.v2.y = y;
@@ -124,6 +83,7 @@ namespace World {
             return e;
         }
 
+
         public static Edge5 TerraceLerp(Edge5 e1, Edge5 e2, int step){
             Edge5 e3;
             e3.v1 = Edge.TerraceLerp(e1.v1, e2.v1, step);
@@ -131,16 +91,6 @@ namespace World {
             e3.v3 = Edge.TerraceLerp(e1.v3, e2.v3, step);
             e3.v4 = Edge.TerraceLerp(e1.v4, e2.v4, step);
             e3.v5 = Edge.TerraceLerp(e1.v5, e2.v5, step);
-            return e3;
-        }
-
-        public static Edge5 Lerp(Edge5 e1, Edge5 e2, float step) {
-            Edge5 e3;
-            e3.v1 = Vector3.Lerp(e1.v1, e2.v1, step);
-            e3.v2 = Vector3.Lerp(e1.v2, e2.v2, step);
-            e3.v3 = Vector3.Lerp(e1.v3, e2.v3, step);
-            e3.v4 = Vector3.Lerp(e1.v4, e2.v4, step);
-            e3.v5 = Vector3.Lerp(e1.v5, e2.v5, step);
             return e3;
         }
 
@@ -163,6 +113,37 @@ namespace World {
             result.v4 = Config.Perturb(e.v4);
             result.v5 = Config.Perturb(e.v5);
             return result;
+        }
+    }
+
+    public struct Edge7 {
+        public Vector3 v1;
+        public Vector3 v2;
+        public Vector3 v3;
+        public Vector3 v4;
+        public Vector3 v5;
+        public Vector3 v6;
+        public Vector3 v7;
+
+        public Edge7(Vector3 start, Vector3 end){
+            v1 = start;
+            v2 = Vector3.Lerp(start, end, 1f / 6);
+            v3 = Vector3.Lerp(start, end, 2f / 6);
+            v4 = Vector3.Lerp(start, end, 0.5f);
+            v5 = Vector3.Lerp(start, end, 4f / 6);
+            v6 = Vector3.Lerp(start, end, 5f / 6);
+            v7 = end;
+        }
+
+        public static Edge7 SetY(Edge7 e, float y){
+            e.v1.y = y;
+            e.v2.y = y;
+            e.v3.y = y;
+            e.v4.y = y;
+            e.v5.y = y;
+            e.v6.y = y;
+            e.v7.y = y;
+            return e;
         }
     }
 }

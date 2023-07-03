@@ -11,8 +11,10 @@ namespace Developer
         public Grid grid;
         private Color activeColour;
         private int activeElevation;
+        private int activeWaterLevel;
         private bool applyColour;
         private bool applyElevation = true;
+        private bool applyWaterLevel = true;
         private int brushSize;
         private OptionalToggle riverMode;
         private OptionalToggle roadMode;
@@ -79,20 +81,14 @@ namespace Developer
             {
                 if (applyColour) cell.Colour = activeColour;
                 if (applyElevation) cell.Elevation = activeElevation;
+                if (applyWaterLevel) cell.WaterLevel = activeWaterLevel;
                 if (riverMode == OptionalToggle.No) cell.RemoveRiver();
                 if (roadMode == OptionalToggle.No) cell.RemoveRoad();
                 if (isDrag) {
                     Cell otherCell = cell.GetNeighbour(dragDirection.Opposite());
                     if (otherCell) {
-                        if (riverMode == OptionalToggle.Yes)
-                        {
-                            otherCell.SetOutgoingRiver(dragDirection);
-                        }
-                        
-                        if (roadMode == OptionalToggle.Yes)
-                        {
-                            otherCell.AddRoad(dragDirection);
-                        }
+                        if (riverMode == OptionalToggle.Yes) otherCell.SetOutgoingRiver(dragDirection);                      
+                        if (roadMode == OptionalToggle.Yes) otherCell.AddRoad(dragDirection);
                     }
                 }
             }
@@ -109,6 +105,14 @@ namespace Developer
 
         public void SetApplyElevation(bool toggle) {
             applyElevation = toggle;
+        }
+
+        public void SetWaterLevel (float level) {
+            activeWaterLevel = (int)level;
+        }
+
+        public void SetApplyWaterLevel (bool toggle) {
+            applyWaterLevel = toggle;
         }
         
         public void SetBrushSize (float size) {

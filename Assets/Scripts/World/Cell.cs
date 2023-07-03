@@ -42,14 +42,16 @@ namespace World {
 
         public float RiverBedY => Position.y + Config.RiverBedElevationOffset;
 
-        public float RiverSurfaceY => Position.y + Config.RiverSurfaceElevationOffset;
+        public float RiverSurfaceY => Position.y + Config.WaterSurfaceElevationOffset;
+
+        public bool IsUnderWater => waterLevel > elevation;
+
+        public float WaterSurfaceY => waterLevel * Config.ElevationStep + Config.WaterSurfaceElevationOffset;
         
         private Color colour;
-        public Color Colour
-        {
+        public Color Colour {
             get => colour;
-            set
-            {
+            set {
                 if (colour == value) return;
                 colour = value;
                 RefreshNeighbours();
@@ -57,11 +59,9 @@ namespace World {
         }
 
         private int elevation;
-        public int Elevation
-        {
+        public int Elevation {
             get => elevation;
-            set
-            {
+            set {
                 if (elevation == value) return;
                 elevation = value;
                 Vector3 position = transform.localPosition;
@@ -108,6 +108,17 @@ namespace World {
                 }
                 
                 RefreshNeighbours();
+            }
+        }
+
+        private int waterLevel;
+        public int WaterLevel {
+            get => waterLevel;
+            set {
+                if (waterLevel == value) return;
+
+                waterLevel = value;
+                Refresh();
             }
         }
 

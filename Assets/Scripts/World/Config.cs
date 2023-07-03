@@ -23,7 +23,7 @@ namespace World {
         public static readonly float TerraceVerticalSize = 1f / (TerracesPerSlope + 1);
         
         public static readonly float RiverBedElevationOffset = -1.5f;
-        public static readonly float RiverSurfaceElevationOffset = -0.5f;
+        public static readonly float WaterSurfaceElevationOffset = -0.5f;
 
         public static readonly Vector3 RoadElevationOffset = new Vector3(0f, 0.0005f, 0f);
 

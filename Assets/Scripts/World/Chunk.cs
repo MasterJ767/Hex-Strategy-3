@@ -8,6 +8,7 @@ namespace World {
         public HexMesh terrain;
         public HexMesh rivers;
         public HexMesh roads;
+        public HexMesh water;
         
         private Cell[] cells;
         private Canvas gridCanvas;
@@ -45,6 +46,7 @@ namespace World {
             terrain.Clear();
             rivers.Clear();
             roads.Clear();
+            water.Clear();
             for (int i = 0; i < cells.Length; ++i)
             {
                 TriangulateCell(cells[i]);
@@ -52,6 +54,7 @@ namespace World {
             terrain.Apply();
             rivers.Apply();
             roads.Apply();
+            water.Apply();
         }
         
         private void TriangulateCell(Cell cell) {
@@ -79,6 +82,8 @@ namespace World {
             else TriangulateSolidCell(direction, cell, centre, junctionEdge, blendEdge);
 
             if (cell.HasRoad) TriangulateRoadCell(direction, cell, centre, junctionEdge, blendEdge);
+
+            if (cell.IsUnderWater) TriangulateWaterCell(direction, cell, centre, junctionEdge, blendEdge);
         }
 
         private void TriangulateBlend(HexDirection direction, Cell cell, Edge5 blendEdge) {
@@ -114,6 +119,12 @@ namespace World {
             else {
                 TriangulateStrip(cellEdge, neighbourEdge, cell.Colour, neighbour.Colour);
                 if (cell.HasRoadThroughEdge(direction)) TriangulateStrip(new Edge3(cellEdge), new Edge3(neighbourEdge));
+            }
+
+            if (cell.IsUnderWater && neighbour.IsUnderWater) {
+                cellEdge = Edge5.SetY(cellEdge, cell.WaterSurfaceY);
+                neighbourEdge = Edge5.SetY(neighbourEdge, neighbour.WaterSurfaceY);
+                TriangulateStrip(cellEdge, neighbourEdge);
             }
         }
 
@@ -196,6 +207,19 @@ namespace World {
                 // Flat Triangle
                 terrain.AddTriangle(cellCorner, neighbourCorner, neighbour2Corner);
                 terrain.AddTriangleColour(cell.Colour, neighbour.Colour, neighbour2.Colour);
+            }
+
+            cellCorner.y = cell.WaterSurfaceY;
+            neighbourCorner.y = neighbour.WaterSurfaceY;
+            neighbour2Corner.y = neighbour2.WaterSurfaceY;
+            if (cell.IsUnderWater && neighbour.IsUnderWater && neighbour2.IsUnderWater) {
+                water.AddTriangle(cellCorner, neighbourCorner, neighbour2Corner);
+            }
+            else if (cell.IsUnderWater && neighbour.IsUnderWater) {
+
+            }
+            else if (cell.IsUnderWater && neighbour2.IsUnderWater) {
+               
             }
         }
 
@@ -448,6 +472,23 @@ namespace World {
             roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
         }
 
+        private void TriangulateWaterCell(HexDirection direction, Cell cell, Vector3 centre, Edge3 junctionEdge, Edge5 blendEdge) {
+            centre.y = cell.WaterSurfaceY;
+            junctionEdge = Edge3.SetY(junctionEdge, cell.WaterSurfaceY);
+            blendEdge = Edge5.SetY(blendEdge, cell.WaterSurfaceY);
+            
+            Cell neighbour = cell.GetNeighbour(direction);
+            if (neighbour != null && neighbour.Elevation > cell.Elevation) {
+                Vector3 v1 = Config.GetFirstCorner(centre, direction);
+                Vector3 v2 = Config.GetSecondCorner(centre, direction);
+                Edge7 cellEdge = new Edge7(v1, v2);
+                TriangulateStrip(blendEdge, cellEdge);
+            }
+
+            TriangulateFan(centre, junctionEdge);
+            TriangulateStrip(junctionEdge, blendEdge);
+        }
+
         private void TriangulateFan(Vector3 p1, Edge3 e1, Color c1) {
             terrain.AddTriangle(p1, e1.v1, e1.v2);
             terrain.AddTriangleColour(c1);
@@ -471,22 +512,9 @@ namespace World {
             roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(u, 0f), new Vector2(0f, 0f));
         }
 
-        private void TriangulateFan(Vector3 p1, Edge5 e1, Color c1) {
-            terrain.AddTriangle(p1, e1.v1, e1.v2);
-            terrain.AddTriangleColour(c1);
-            terrain.AddTriangle(p1, e1.v2, e1.v3);
-            terrain.AddTriangleColour(c1);
-            terrain.AddTriangle(p1, e1.v3, e1.v4);
-            terrain.AddTriangleColour(c1);
-            terrain.AddTriangle(p1, e1.v4, e1.v5);
-            terrain.AddTriangleColour(c1);
-        }
-
-        private void TriangulateStrip(Edge3 e1, Edge3 e2, Color c1, Color c2) {
-            terrain.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
-            terrain.AddQuadColour(c1, c2);
-            terrain.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
-            terrain.AddQuadColour(c1, c2);
+        private void TriangulateFan(Vector3 p1, Edge3 e1) {
+            water.AddTriangle(p1, e1.v1, e1.v2);
+            water.AddTriangle(p1, e1.v2, e1.v3);
         }
 
         private void TriangulateStrip(Edge3 e1, Edge3 e2, float u1, float u2, float v1, float v2) {
@@ -515,6 +543,13 @@ namespace World {
             terrain.AddQuadColour(c1, c2);
         }
 
+        private void TriangulateStrip(Edge5 e1, Edge5 e2) {
+            water.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
+            water.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
+            water.AddQuad(e1.v3, e1.v4, e2.v3, e2.v4);
+            water.AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
+        }
+
         private void TriangulateStrip(Edge3 e1, Edge5 e2, Color c1, Color c2) {
             terrain.AddTriangle(e1.v1, e2.v1, e2.v2);
             terrain.AddTriangleColour(c1, c2, c2);
@@ -524,6 +559,21 @@ namespace World {
             terrain.AddQuadColour(c1, c2);
             terrain.AddTriangle(e1.v3, e2.v4, e2.v5);
             terrain.AddTriangleColour(c1, c2, c2);
+        }
+
+        private void TriangulateStrip(Edge3 e1, Edge5 e2) {
+            water.AddTriangle(e1.v1, e2.v1, e2.v2);
+            water.AddQuad(e1.v1, e1.v2, e2.v2, e2.v3);
+            water.AddQuad(e1.v2, e1.v3, e2.v3, e2.v4);
+            water.AddTriangle(e1.v3, e2.v4, e2.v5);
+        }
+        private void TriangulateStrip(Edge5 e1, Edge7 e2) {
+            water.AddTriangle(e1.v1, e2.v1, e2.v2);
+            water.AddQuad(e1.v1, e1.v2, e2.v2, e2.v3);
+            water.AddQuad(e1.v2, e1.v3, e2.v3, e2.v4);
+            water.AddQuad(e1.v3, e1.v4, e2.v4, e2.v5);
+            water.AddQuad(e1.v4, e1.v5, e2.v5, e2.v6);
+            water.AddTriangle(e1.v5, e2.v6, e2.v7);
         }
     }
 }
